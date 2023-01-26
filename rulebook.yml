@@ -1,0 +1,13 @@
+---
+
+- name: Event-driven automation demo with file_watch plugin
+  hosts: test
+  sources:
+    - ansible.eda.file_watch:
+        path: /home/timgrt/important-directory
+        recursive: true
+    - name: Redeploy important file
+      condition: event.change == "deleted"
+      action:
+        run_playbook:
+          name: demos/file-watch-demo/redeploy.yml

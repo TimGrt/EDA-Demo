@@ -1,0 +1,10 @@
+---
+
+- name: Playbook, triggered by EDA
+  hosts: test
+  gather_facts: false
+  tasks:
+    - name: Redeploy important file
+      ansible.builtin.copy:
+        src: /home/timgrt/EDA-demo/files/my-super-important-file.cfg
+        dest: ~/important-directory/my-super-important-file.cfg
