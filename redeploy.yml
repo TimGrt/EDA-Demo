@@ -1,10 +1,20 @@
 ---
 
 - name: Playbook, triggered by EDA
-  hosts: test
+  hosts: localhost
   gather_facts: false
   tasks:
+    - name: Redeployment necessary
+      ansible.builtin.debug:
+        msg: "Oh oh, someone removed my important file"
+    - name: Ensure target directory exists
+      ansible.builtin.file:
+        path: /tmp/important-directory
+        state: directory
     - name: Redeploy important file
       ansible.builtin.copy:
-        src: /home/timgrt/EDA-demo/files/my-super-important-file.cfg
-        dest: ~/important-directory/my-super-important-file.cfg
+        src: "{{ lookup('ansible.builtin.env', 'PWD') }}/files/my-super-important-file.cfg"
+        dest: /tmp/important-directory/my-super-important-file.cfg
+    - name: Redeployment done
+      ansible.builtin.debug:
+        msg: "Thank god, everything is back in place."
