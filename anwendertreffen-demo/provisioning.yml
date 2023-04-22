@@ -22,6 +22,3 @@
           - 8080
         ports:
           - "8080:80/tcp"
-
-- name: Configuring target after provisioning is complete
-  ansible.builtin.import_playbook: create-mkdocs-deployment.yml
