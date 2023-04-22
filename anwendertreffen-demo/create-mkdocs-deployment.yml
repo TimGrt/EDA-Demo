@@ -1,0 +1,41 @@
+---
+
+- name: Create MkDocs deployment
+  hosts: web
+  become: true
+  vars:
+    mkdocs_project_git_url: https://github.com/TimGrt/Ansible-Best-Practices.git
+    mkdocs_project_destination_directory: "{{ ansible_user_dir }}/{{ mkdocs_project_git_url | basename | splitext | first }}"
+  tasks:
+    - name: Ensure Git is installed
+      ansible.builtin.package:
+        name: git
+        state: present
+
+    - name: Clone Best-Practice project repository  # noqa latest[git]
+      ansible.builtin.git:
+        repo: "{{ mkdocs_project_git_url }}"
+        dest: "{{ mkdocs_project_destination_directory }}"
+        update: false
+      notify: Build_mkdocs
+
+    - name: Install Python requirements for MkDocs deployment
+      ansible.builtin.pip:
+        requirements: "{{ mkdocs_project_destination_directory }}/requirements.txt"
+        extra_args: --user
+
+    - name: Ensure Webserver is installed
+      ansible.builtin.package:
+        name: httpd
+        state: present
+
+    - name: Ensure Webserver service is running
+      ansible.builtin.service:
+        name: httpd
+        state: started
+
+  handlers:
+    - name: Build_mkdocs  # noqa no-changed-when
+      ansible.builtin.command:
+        cmd: ~/.local/bin/mkdocs build -d /var/www/html
+        chdir: "{{ mkdocs_project_destination_directory }}"

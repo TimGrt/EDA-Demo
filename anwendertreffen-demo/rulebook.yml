@@ -1,0 +1,24 @@
+---
+
+- name: Event-driven automation demo with url_check plugin
+  hosts: all
+  sources:
+    - ansible.eda.url_check:
+        urls:
+          - http://localhost:8080
+        delay: 10
+  rules:
+    - name: Output state of Best-Practice container
+      condition: event.url_check.status == "up"
+      action:
+        run_module:
+          name: ansible.builtin.debug
+          module_args:
+            msg: Best-Practice Container is running
+    - name: Redeploy Best-Practice container
+      condition: event.url_check.status == "down"
+      action:
+        run_playbook:
+          name: provision-infrastructure.yml
+          extra_vars:
+            redeploy: true

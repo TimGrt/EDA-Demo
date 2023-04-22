@@ -1,0 +1,9 @@
+---
+all:
+  hosts:
+  children:
+    web:
+      hosts:
+        mkdocs1:
+          ansible_connection: docker
+          ansible_user: ansible
