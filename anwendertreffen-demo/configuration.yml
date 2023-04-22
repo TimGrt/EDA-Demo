@@ -16,7 +16,7 @@
       ansible.builtin.git:
         repo: "{{ mkdocs_project_git_url }}"
         dest: "{{ mkdocs_project_destination_directory }}"
-        update: false
+        update: "{{ redeploy | default(false) }}"
       notify: Build_mkdocs
 
     - name: Install Python requirements for MkDocs deployment
@@ -33,6 +33,12 @@
       ansible.builtin.service:
         name: httpd
         state: started
+
+    - name: Trigger handler when redeployment is necessary
+      ansible.builtin.meta: flush_handlers
+      when:
+        - redeploy is defined
+        - redeploy | bool
 
   handlers:
     - name: Build_mkdocs  # noqa no-changed-when
