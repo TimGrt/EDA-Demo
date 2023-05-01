@@ -1,0 +1,89 @@
+---
+- name: Provision infrastructure
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create container for EDA demo
+      community.docker.docker_container:
+        name: anwendertreffen
+        image: timgrt/fedora36-ansible
+        state: started
+        command: "/usr/sbin/init"
+        cgroupns_mode: host
+        hostname: fedora36
+        tmpfs:
+          - /run
+          - /tmp
+        volumes:
+          - /sys/fs/cgroup:/sys/fs/cgroup:rw
+          - /var/lib/containerd
+        privileged: true
+        exposed_ports:
+          - 8080
+        ports:
+          - "8080:80/tcp"
+
+- name: Prepare Fedora host for EDA
+  hosts: eda
+  become: true
+  tasks:
+    - name: Ensure the host is supported
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Fedora"
+          - ansible_distribution_version == "36"
+        quiet: true
+
+    - name: Install Java
+      ansible.builtin.dnf:
+        name: java-17-openjdk
+        state: present
+
+    - name: Set JAVA_HOME environment variable
+      ansible.builtin.lineinfile:
+        path: /etc/bashrc
+        regexp: "^export JAVA_HOME"
+        line: export JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
+
+    - name: Install jpy dependencies
+      ansible.builtin.dnf:
+        name:
+          - maven
+          - gcc
+          - python3-devel
+        state: present
+
+    - name: Install Ansible dependencies
+      ansible.builtin.pip:
+        name:
+          - ansible
+          - ansible-rulebook
+          - ansible-runner
+        extra_args: "--user"
+
+    - name: Get installed collections
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection list --format json
+      changed_when: false
+      register: installed_collections_output
+
+    - name: Install EDA collection
+      ansible.builtin.command:
+        cmd: ansible-galaxy collection install ansible.eda
+      when: (installed_collections_output.stdout | from_json)['/root/.ansible/collections/ansible_collections']['ansible.eda'] is not defined
+      register: eda_collection_install
+      changed_when: eda_collection_install.changed
+
+    - name: Ensure Git is installed
+      ansible.builtin.package:
+        name: git
+        state: present
+
+    - name: Clone EDA demo project  # noqa latest[git]
+      ansible.builtin.git:
+        repo: https://github.com/TimGrt/EDA-Demo
+        dest: "~/EDA-Demo"
+
+    - name: Output usage info
+      ansible.builtin.debug:
+        msg: "Login to container with >> docker exec -it {{ inventory_hostname }} /bin/bash <<"

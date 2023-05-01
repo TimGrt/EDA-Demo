@@ -1,0 +1,7 @@
+---
+
+github_api_token: "{{ github_api_token_vault }}"
+github_open_issue_project: https://api.github.com/repos/TimGrt/EDA-Demo/issues
+
+mkdocs_project_git_url: https://github.com/TimGrt/Ansible-Best-Practices.git
+mkdocs_project_destination_directory: "{{ ansible_user_dir }}/{{ mkdocs_project_git_url | basename | splitext | first }}"
