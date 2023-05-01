@@ -1,4 +1,0 @@
----
-
-- ansible.builtin.import_playbook: provisioning.yml
-- ansible.builtin.import_playbook: configuration.yml

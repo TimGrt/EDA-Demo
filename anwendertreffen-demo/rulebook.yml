@@ -1,34 +1,41 @@
 ---
 
-- name: Event-driven automation demo with url_check plugin
+- name: Event-driven automation demo for Ansible Anwendertreffen
   hosts: web
   sources:
-    - ansible.eda.url_check:
+    - name: webserver_up
+      ansible.eda.url_check:
         urls:
-          - http://localhost:80
+          - http://localhost:80/ansible
         delay: 10
-    - ansible.eda.file_watch:
-        path: /var/www/html
+    - name: anwendertreffen
+      ansible.eda.url_check:
+        urls:
+          - http://localhost:80/anwendertreffen
+        delay: 10
+    - name: webserver_config_watch
+      ansible.eda.file_watch:
+        path: /etc/httpd/conf
         recursive: true
   rules:
     - name: Output state of Best-Practice container
-      condition: event.url_check.status == "up"
+      condition: event.url_check.status == "up" and event.meta.source.name =="webserver_up"
       action:
         run_module:
           name: ansible.builtin.debug
           module_args:
             msg: Best-Practice Container is running
-    - name: Restart webserver
-      condition: event.url_check.status == "down"
+
+    - name: Redeploy MkDocs
+      condition: event.url_check.status == "down" and event.meta.source.name =="webserver_up"
       action:
         run_playbook:
-          name: provision-infrastructure.yml
-          extra_vars:
-            eda_triggered: true
-    - name: Redeploy Best-Practice container
-      condition: event.url_check.status == "down"
-      action:
-        run_playbook:
-          name: provision-infrastructure.yml
+          name: configuration.yml
           extra_vars:
             redeploy: true
+
+    - name: Output when on Anwendertreffen
+      condition: event.url_check.status == "up" and event.meta.source.name =="anwendertreffen"
+      action:
+        run_playbook:
+          name: awesome.yml
