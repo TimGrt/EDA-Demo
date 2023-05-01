@@ -1,0 +1,11 @@
+---
+- name: Output event info
+  hosts: web
+  gather_facts: false
+  tasks:
+    - name: Check for running host
+      ansible.builtin.debug:
+        msg:
+          - ">>> WOHOO! <<<"
+          - "We are at the 'Ansible Anwendertreffen'!"
+          - "Also, it is Star Wars day, may the 4th be with you!!"

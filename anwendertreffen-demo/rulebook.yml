@@ -1,24 +1,39 @@
 ---
 
-- name: Event-driven automation demo with url_check plugin
-  hosts: all
+- name: EDA Demo - Checking outside availability of deployment
+  hosts: web
   sources:
-    - ansible.eda.url_check:
+    - name: webserver_up
+      ansible.eda.url_check:
         urls:
-          - http://localhost:8080
+          - http://localhost:8080/ansible
         delay: 10
+
+    - name: anwendertreffen
+      ansible.eda.url_check:
+        urls:
+          - http://localhost:8080/anwendertreffen
+        delay: 10
+
   rules:
     - name: Output state of Best-Practice container
-      condition: event.url_check.status == "up"
+      condition: event.url_check.status == "up" and event.meta.source.name =="webserver_up"
       action:
         run_module:
           name: ansible.builtin.debug
           module_args:
-            msg: Best-Practice Container is running
-    - name: Redeploy Best-Practice container
-      condition: event.url_check.status == "down"
+            msg: Best-Practice Container is running!
+
+    - name: Redeploy MkDocs
+      condition: event.url_check.status == "down" and event.meta.source.name =="webserver_up"
       action:
         run_playbook:
-          name: provision-infrastructure.yml
+          name: configuration.yml
           extra_vars:
             redeploy: true
+
+    - name: Output when on Anwendertreffen
+      condition: event.url_check.status == "up" and event.meta.source.name =="anwendertreffen"
+      action:
+        run_playbook:
+          name: awesome.yml
