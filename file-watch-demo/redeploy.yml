@@ -7,14 +7,19 @@
     - name: Redeployment necessary
       ansible.builtin.debug:
         msg: "Oh oh, someone removed my important file"
+
     - name: Ensure target directory exists
       ansible.builtin.file:
         path: /tmp/important-directory
+        mode: "0755"
         state: directory
+
     - name: Redeploy important file
       ansible.builtin.copy:
         src: "{{ lookup('ansible.builtin.env', 'PWD') }}/files/my-super-important-file.cfg"
         dest: /tmp/important-directory/my-super-important-file.cfg
+        mode: "0644"
+
     - name: Redeployment done
       ansible.builtin.debug:
         msg: "Thank god, everything is back in place."

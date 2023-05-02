@@ -16,7 +16,7 @@ docker pull timgrt/fedora37-ansible
 Run a container from the image:
 
 ```bash
-docker run --detach --privileged volume=/sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host --name fedora37 timgrt/fedora37-ansible
+docker run --detach --privileged --volume=/sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host --name fedora37 timgrt/fedora37-ansible
 ```
 
 Login to container:
@@ -26,6 +26,7 @@ docker exec -it fedora37 /bin/bash
 ```
 
 Clone the repository inside the container, install *git* beforehand:
+
 ```bash
 dnf install git && git clone https://github.com/TimGrt/EDA-Demo.git
 ```
@@ -65,7 +66,6 @@ Adjust the provided inventory file, currently it uses localhost as the target.
 The provided rulebook scans the directory `/tmp/important-directory`, if any file-system changes ocur in it (e.g. a file within this folder gets deleted), the playbook `redeploy.yml` is triggered.
 
 To prepare everything (the folder must exist and be filled), run the playbook (`ansible-playbook -i inventory.yml redeploy.yml`).
-
 
 Now, lets start the EDA process, run the rulebook definition:
 
