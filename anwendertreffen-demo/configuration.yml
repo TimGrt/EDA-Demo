@@ -42,7 +42,10 @@
         state: started
 
     - name: Trigger handler when redeployment is necessary
-      ansible.builtin.meta: flush_handlers
+      ansible.builtin.debug:
+        msg: "Build MkDocs projekt."
+      notify: Build_mkdocs
+      changed_when: true
       when:
         - redeploy is defined
         - redeploy | bool
