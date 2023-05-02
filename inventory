@@ -1,5 +1,5 @@
 [mgmt]
 localhost ansible_connection=local
 
-[eda]
+[web]
 anwendertreffen ansible_connection=docker ansible_user=ansible

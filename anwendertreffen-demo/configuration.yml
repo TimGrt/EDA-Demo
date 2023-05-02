@@ -3,6 +3,9 @@
 - name: Create MkDocs deployment
   hosts: web
   become: true
+  vars:
+    mkdocs_project_git_url: https://github.com/TimGrt/Ansible-Best-Practices.git
+    mkdocs_project_destination_directory: "{{ ansible_user_dir }}/{{ mkdocs_project_git_url | basename | splitext | first }}"
   tasks:
     - name: Ensure Git is installed
       ansible.builtin.package:
@@ -26,11 +29,17 @@
         name: httpd
         state: present
 
+    - name: Deploy webserver configuration
+      ansible.builtin.copy:
+        src: "{{ lookup('ansible.builtin.env', 'PWD') }}/templates/webserver.conf"
+        dest: /etc/httpd/conf/httpd.conf
+        mode: "0644"
+      notify: Restart_webserver
+
     - name: Ensure Webserver service is running
       ansible.builtin.service:
         name: httpd
         state: started
-      notify: Open_Github_Issue
 
     - name: Trigger handler when redeployment is necessary
       ansible.builtin.meta: flush_handlers
@@ -43,3 +52,8 @@
       ansible.builtin.command:
         cmd: ~/.local/bin/mkdocs build -d /var/www/html
         chdir: "{{ mkdocs_project_destination_directory }}"
+
+    - name: Restart_webserver
+      ansible.builtin.service:
+        name: httpd
+        state: restarted

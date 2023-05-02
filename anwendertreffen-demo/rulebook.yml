@@ -3,36 +3,44 @@
 - name: Event-driven automation demo for Ansible Anwendertreffen
   hosts: web
   sources:
-    - name: webserver_up
+    - name: webserver_state
       ansible.eda.url_check:
         urls:
           - http://localhost:80/ansible
         delay: 10
+
+    - name: webserver_config_watch
+      ansible.eda.file_watch:
+        path: /etc/httpd/conf
+        recursive: true
+
     - name: anwendertreffen
       ansible.eda.url_check:
         urls:
           - http://localhost:80/anwendertreffen
         delay: 10
-    - name: webserver_config_watch
-      ansible.eda.file_watch:
-        path: /etc/httpd/conf
-        recursive: true
   rules:
-    - name: Output state of Best-Practice container
-      condition: event.url_check.status == "up" and event.meta.source.name =="webserver_up"
+    - name: Output state if webserver is running
+      condition: event.url_check.status == "up" and event.meta.source.name =="webserver_state"
       action:
         run_module:
           name: ansible.builtin.debug
           module_args:
-            msg: Best-Practice Container is running
+            msg: Webserver is running
 
     - name: Redeploy MkDocs
-      condition: event.url_check.status == "down" and event.meta.source.name =="webserver_up"
+      condition: event.url_check.status == "down" and event.meta.source.name =="webserver_state"
       action:
         run_playbook:
           name: configuration.yml
           extra_vars:
             redeploy: true
+
+    - name: Redeploy important file
+      condition: event.change == "deleted" and event.meta.source.name =="webserver_config_watch"
+      action:
+        run_playbook:
+          name: configuration.yml
 
     - name: Output when on Anwendertreffen
       condition: event.url_check.status == "up" and event.meta.source.name =="anwendertreffen"
